@@ -115,9 +115,14 @@ class GaussianProcessModel(object):
         self.kernel_ = self.gp.kernel_
         self.last_training_size = X.shape[0]
 
-    def predictive_distribution(self, X):
+    def predictive_distribution(self, X, return_cov=False):
         """ Return predictive distributon (mean, std-dev) at X."""
-        return self.gp.predict(X, return_std=True)
+
+        return_std = not return_cov
+        return self.gp.predict(X, return_std=return_std, return_cov=return_cov)
+
+    def sample_y(self, X):
+        return self.gp.sample_y(X)
 
     def _create_gp(self, training_size):
         # Decide whether to perform hyperparameter-optimization of GP

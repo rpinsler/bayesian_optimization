@@ -104,6 +104,8 @@ class KernelRegressionPolicy(UpperLevelPolicy):
             if true, weight vector is sampled from distribution. otherwise the
             distribution's mean is returned
         """
+
+        context = np.atleast_2d(context)
         X = self.nystroem.transform(context)
         if self.bias:
             X = np.hstack((X, np.ones((X.shape[0], 1))))
