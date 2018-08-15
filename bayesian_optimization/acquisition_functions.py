@@ -166,7 +166,7 @@ class GPUpperConfidenceBound(AcquisitionFunction):
     model: gaussian-process object
         Gaussian process model, which models the return landscape
     """
-    def __init__(self, model, const):
+    def __init__(self, model, const=0):
         self.model = model
         self.const = const
 
@@ -186,15 +186,27 @@ class GPUpperConfidenceBound(AcquisitionFunction):
         ucb: float
             the upper confidence point of performance at query point x.
         """
-        T = self.model.gp.X_train_.shape[0]
-        D = self.model.gp.X_train_.shape[1]
 
+        T, D = self.model.X.shape
         kappa = np.sqrt(4*(D + 1)*np.log(T) + self.const)
 
         # Determine model's predictive distribution (mean and
         # standard-deviation)
         mu_x, sigma_x = self.model.predictive_distribution(np.atleast_2d(x))
 
+        ucb = (mu_x - incumbent) + kappa * sigma_x
+
+        return ucb
+
+
+class GPUpperConfidenceBound2(GPUpperConfidenceBound):
+    def __call__(self, x, incumbent=0, *args, **kwargs):
+        T, D = self.model.X.shape
+
+        v = 1
+        delta = .5
+        kappa = np.sqrt(v * (2 * np.log((T ** (D / 2. + 2)) * (np.pi ** 2) / (3. * delta))))
+        mu_x, sigma_x = self.model.predictive_distribution(np.atleast_2d(x))
         ucb = (mu_x - incumbent) + kappa * sigma_x
 
         return ucb
@@ -570,6 +582,8 @@ ACQUISITION_FUNCTIONS = {
     "PI": ProbabilityOfImprovement,
     "EI": ExpectedImprovement,
     "UCB": UpperConfidenceBound,
+    "GP-UCB": GPUpperConfidenceBound,
+    "GP-UCB2": GPUpperConfidenceBound2,
     "GREEDY": Greedy,
     "RANDOM": Random,
     "EntropySearch": EntropySearch,
